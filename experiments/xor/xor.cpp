@@ -2,6 +2,9 @@
 #include <string>
 #include <cstdlib>
 #include <cmath>
+
+#if 0
+
 #include <tinyneat.hpp>
 #include <tinyann.hpp>
 
@@ -76,5 +79,130 @@ int main(){
 
 	test_output();
 	p.export_tofile("xor_test.res");
+	return 0;
+}
+
+#endif
+
+
+#include "NeatPool.hpp"
+#include "NeuralNet.hpp"
+#include "NeuralNetFast.hpp"
+
+template<typename RandomGenerator, size_t N = 1000>
+unsigned int tryout(ann::NeuralNetFast &nn, RandomGenerator &rng) {
+	constexpr static auto send = [](bool x) -> double {
+		return x ? 1 : -1;
+	};
+	constexpr static auto read = [](double x) -> bool {
+		return x > 0;
+	};
+
+	unsigned int score = 0;
+	std::vector<double> inputs(2, 0.);
+	std::vector<double> outputs(1, 0.);
+
+	for (size_t i = N; 0 < i; --i) {
+		bool a = rng();
+		bool b = rng();
+
+		inputs[0] = send(a);
+		inputs[1] = send(b);
+
+		nn.evaluate(inputs, outputs);
+
+		score += (!a != !b) == read(outputs[0]);
+	}
+
+	return score;
+}
+
+#define UNLIKELY(x) __builtin_expect((x), 0)
+
+template <typename U = uint64_t> class RandomizerWithSentinelShift {
+  public:
+    template <typename Rng> bool operator()(Rng &rng) {
+        if (UNLIKELY(1 == m_rand)) {
+            m_rand = std::uniform_int_distribution<U>{}(rng) | s_mask_left1;
+        }
+        bool const ret = m_rand & 1;
+        m_rand >>= 1;
+        return ret;
+    }
+
+  private:
+    static constexpr const U s_mask_left1 = U(1) << (sizeof(U) * 8 - 1);
+    U m_rand = 1;
+};
+
+
+int main() {
+	neat::MutationRateContainer mutation_rates = {};
+	neat::SpeciatingParameterContainer speciating_parameters = {};
+
+	// speciating_parameters.population = 1000;
+	speciating_parameters.stale_species = 5;
+
+	// speciating_parameters.delta_disjoint = 1.0;
+	// speciating_parameters.delta_weights = 0.4;
+	// speciating_parameters.delta_threshold = 3.0;
+
+	mutation_rates.connection_mutate_chance = 0.8;
+	mutation_rates.perturb_chance = 0.9;
+	// mutation_rates.crossover_chance = 0.95;
+	// mutation_rates.disable_mutation_chance = 0.75;
+	// mutation_rates.node_mutation_chance = 0.03;
+	// mutation_rates.link_mutation_chance = 0.05;
+	// mutation_rates.link_mutation_chance = 0.25;
+
+
+	neat::NeatPool pool(
+		2, 1, 1, false
+		, mutation_rates, speciating_parameters
+	);
+
+	std::mt19937 generator{std::random_device{}()};
+	// auto rng = [&generator, distributor = std::uniform_int_distribution<int>(1, 2)]() -> bool {
+	// 	return 2 == distributor(generator);
+	// };
+	auto rng = [&generator, spread = RandomizerWithSentinelShift()]() mutable -> bool { return spread(generator); };
+
+	for(unsigned int best_fitness = 0; best_fitness < 990; pool.new_generation()) {
+		unsigned int current_fitness = 0;
+		unsigned int max_fitness = 0;
+		unsigned int min_fitness = 100000;
+
+		for(auto &specie: pool.species) {
+			for(auto &genome: specie.genomes) {
+				ann::NeuralNetFast n;
+
+				n.from_genome(genome);
+				genome.fitness = current_fitness = tryout(n, rng);
+
+				min_fitness = (current_fitness < min_fitness) ? current_fitness : min_fitness;
+				max_fitness = (max_fitness < current_fitness) ? current_fitness : max_fitness;
+
+				if (best_fitness < current_fitness) {
+					best_fitness = current_fitness;
+					// std::cerr << "Saving NeuralNet with HighScore=" << current_fitness << std::endl;
+					// n.export_tofile("HighScore.neat.nn");
+				}
+
+			}
+		}
+
+		std::cerr << "Generation#" << pool.generation() << ": "
+			<< "RecordHigh=" << best_fitness
+			<< ", " << "Vanguard=" << max_fitness
+			<< ", " << "Slacker=" << min_fitness
+			<< std::endl;
+
+		if (30 < pool.generation()) {
+			std::cerr << "Failed to converge under 30 generations, quitting" << std::endl;
+
+			return 1;
+		}
+	}
+
 	return 0;
 }
