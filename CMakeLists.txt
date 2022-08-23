@@ -45,28 +45,8 @@ endif()
 set_target_properties(tinyai PROPERTIES LINKER_LANGUAGE CXX)
 target_compile_options(tinyai PUBLIC -Wall -Wextra)
 
-add_executable(
-        experiment-xor
-        ${CMAKE_CURRENT_SOURCE_DIR}/experiments/xor/xor.cpp
-)
-target_link_libraries(experiment-xor tinyai)
 
-
-
-
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/googletest)
-enable_testing()
-
-add_executable(
-  NeuralNetFast
-  ${CMAKE_CURRENT_SOURCE_DIR}/test/NeuralNetFast.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/MutationRateContainer.hpp        ${CMAKE_CURRENT_SOURCE_DIR}/src/MutationRateContainer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/NetworkInfoContainer.hpp         ${CMAKE_CURRENT_SOURCE_DIR}/src/NetworkInfoContainer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/Gene.hpp                         ${CMAKE_CURRENT_SOURCE_DIR}/src/Gene.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/Genotype.hpp                     ${CMAKE_CURRENT_SOURCE_DIR}/src/Genotype.cpp
-)
-target_link_libraries(NeuralNetFast GTest::gmock GTest::gtest_main)
-target_include_directories(NeuralNetFast PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-include(GoogleTest)
-gtest_discover_tests(NeuralNetFast)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/googletest)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/experiments/xor)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/experiments/SinglePole)

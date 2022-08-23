@@ -1,4 +1,5 @@
-# Generated using https://aviskarkc10/gitignore# Created by https://www.toptal.com/developers/gitignore/api/clion
+# Generated using https://aviskarkc10/gitignore
+# Created by https://www.toptal.com/developers/gitignore/api/clion
 # Edit at https://www.toptal.com/developers/gitignore?templates=clion
 
 ### CLion ###
@@ -46,6 +47,9 @@
 
 # CMake
 cmake-build-*/
+dbg-build/
+rel-build/
+build/
 
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml
@@ -124,5 +128,3 @@ fabric.properties
 # gcc output files
 a.out
 *.o
-dbg-build/
-rel-build/

@@ -119,7 +119,7 @@ unsigned int tryout(ann::NeuralNetFast &nn, RandomGenerator &rng) {
 
 #define UNLIKELY(x) __builtin_expect((x), 0)
 
-template <typename U = uint64_t> class RandomizerWithSentinelShift {
+template <typename U = uint64_t> class Randomizer {
   public:
     template <typename Rng> bool operator()(Rng &rng) {
         if (UNLIKELY(1 == m_rand)) {
@@ -165,7 +165,7 @@ int main() {
 	// auto rng = [&generator, distributor = std::uniform_int_distribution<int>(1, 2)]() -> bool {
 	// 	return 2 == distributor(generator);
 	// };
-	auto rng = [&generator, spread = RandomizerWithSentinelShift()]() mutable -> bool { return spread(generator); };
+	auto rng = [&generator, spread = Randomizer()]() mutable -> bool { return spread(generator); };
 
 	for(unsigned int best_fitness = 0; best_fitness < 990; pool.new_generation()) {
 		unsigned int current_fitness = 0;
