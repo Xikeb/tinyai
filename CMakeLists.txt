@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.19)
 project(tinyai)
 
 set(CMAKE_CXX_STANDARD 20)
-#set(CMAKE_CXX_COMPILER /usr/bin/g++)
-#set(CMAKE_C_COMPILER  /usr/bin/gcc)
 
 add_library(tinyai OBJECT
         ${CMAKE_CURRENT_SOURCE_DIR}/include/strong_typedef.hpp
@@ -47,6 +45,7 @@ target_compile_options(tinyai PUBLIC -Wall -Wextra)
 
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/googletest)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/SFML)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/experiments/xor)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/experiments/SinglePole)

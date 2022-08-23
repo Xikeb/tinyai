@@ -7,159 +7,9 @@
 #include "NeuralNet.hpp"
 #include "NeuralNetFast.hpp"
 
+constexpr static unsigned int maxSteps = 30*60*100;
+
 namespace experiments::cart_pole_single {
-
-	template<typename Type>
-	struct coord {
-		using type = Type;
-		using self = coord<type>;
-
-		type x = 0;
-		type y = 0;
-
-    	template<typename NewType>
-		constexpr coord<NewType> as() const noexcept {
-			return {NewType(x), NewType(y)};
-		}
-
-		constexpr type dot(coord const &b) const noexcept {
-			return this->x*b.x + this->y*b.y;
-		}
-		constexpr type sqlen() const noexcept {
-			return this->x * this->x + this->y * this->y;
-		}
-		type len() const noexcept {
-			return std::sqrt(sqlen());
-		}
-		self unit() const noexcept {
-			return *this / this->len();
-		}
-		self &normalize() const noexcept {
-			return *this /= this->len();
-		}
-
-		self &round() noexcept {
-			x = std::round(x);
-			y = std::round(y);
-
-			return *this;
-		}
-
-		constexpr self rounded() const noexcept {
-			return {std::round(x), std::round(y)};
-		}
-
-		constexpr self project(self const &b) const noexcept {
-			return *this * (this->dot(b) / b.sqlen());
-		}
-
-		constexpr coord projectNorm(coord const &b) const noexcept {
-			return *this * this->norm().dot(b.norm());
-		}
-		coord rotate(double angle) const noexcept {
-			double sin, cos;
-			sincos(angle, &sin, &cos);
-			return {float(x*cos -y*sin), float(x*sin+y*cos)};
-		}
-
-		constexpr bool isInRect(self const &corner1, self const &corner2) const noexcept {
-			return ((corner1.x <= x) && (x < corner2.x))
-			&& ((corner1.y <= y) && (y < corner2.y));
-		}
-
-		constexpr bool isInRect(type corner1_x, type corner1_y, type corner2_x, type corner2_y) const noexcept {
-			return ((corner1_x <= x) && (x < corner2_x))
-			&& ((corner1_y <= y) && (y < corner2_y));
-		}
-
-		constexpr bool inRange(self const &oth, double range) const noexcept {
-			return (*this - oth).sqlen() <= (range * range);
-		}
-
-		constexpr bool inRange(double range) const noexcept {
-			return this->sqlen() <= (range * range);
-		}
-
-		constexpr self operator-() const noexcept {
-			return {type{-x}, type{-y}};
-		}
-
-    	template<typename BType>
-		inline constexpr operator coord<BType>() noexcept {
-			return this->as<BType>();
-		}
-	};
-
-	template<typename Type>
-	std::ostream &operator<<(std::ostream &os, coord<Type> const &c) {
-		return os << '{' << c.x << " ; " << c.y << '}';
-	}
-
-
-	template<typename Type, typename B>
-	inline constexpr auto operator*(coord<Type> const &c, B b) noexcept {
-		using ResType = decltype(c.x * b);
-		return coord<ResType>{ResType(c.x*b), ResType(c.y*b)};
-	}
-	template<typename Type, typename B>
-	inline constexpr coord<Type> &operator*=(coord<Type> &c, B b) noexcept {
-		c.x *= b;
-		c.y *= b;
-		return c;
-	}
-	template<typename Type, typename B>
-	inline constexpr auto operator/(coord<Type> const &c, B b) noexcept {
-		return c * (1/b);
-	}
-	template<typename Type, typename B>
-	inline constexpr coord<Type> &operator/=(coord<Type> &c, B b) noexcept {
-		return c *= (1/b);
-	}
-
-	template<typename AType, typename BType>
-	inline constexpr auto operator+(coord<AType> const &a,coord<BType> const &b) noexcept {
-		using Ctype = decltype(a.x + b.x);
-		return coord<Ctype>{Ctype(a.x + b.x), Ctype(a.y + b.y)};
-	}
-	template<typename AType, typename BType>
-	inline constexpr auto operator-(coord<AType> const &a,coord<BType> const &b) noexcept {
-		using Ctype = decltype(a.x - b.x);
-		return coord<Ctype>{Ctype(a.x - b.x), Ctype(a.y-b.y)};
-	}
-	template<typename AType, typename BType>
-	inline constexpr coord<AType> &operator+=(coord<AType> &a,coord<BType> const &b) noexcept {
-		a.x += b.x;
-		a.y += b.y;
-		return a;
-	}
-	template<typename AType, typename BType>
-	inline constexpr coord<AType> &operator-=(coord<AType> &a,coord<BType> const &b) noexcept {
-		a.x -= b.x;
-		a.y -= b.y;
-		return a;
-	}
-
-	template<typename T>
-	constexpr std::pair<coord<T>, int> intersectSegments(coord<T> const &a1, coord<T> const &a2, coord<T> const &b1, coord<T> const &b2) noexcept {
-		auto fa1 = a1.template as<double>(),
-		fa2 = a2.template as<double>(),
-		fb1 = b1.template as<double>(),
-		fb2 = b2.template as<double>();
-
-		double d = (fa1.x - fa2.x) * (fb1.y - fb2.y) - (fa1.y - fa2.y) * (fb1.x - fb2.x);
-		if (d == 0) {
-			return {{T(),T()}, false};
-		}
-
-		double xi = ((fb1.x - fb2.x) * (fa1.x * fa2.y - fa1.y * fa2.x) - (fa1.x - fa2.x) * (fb1.x * fb2.y - fb1.y * fb2.x)) / d;
-		double yi = ((fb1.y - fb2.y) * (fa1.x * fa2.y - fa1.y * fa2.x) - (fa1.y - fa2.y) * (fb1.x * fb2.y - fb1.y * fb2.x)) / d;
-
-		if (not ((xi < fa1.x) ^ (xi < fa2.x))) { return {{T(),T()}, false}; }
-		if (not ((xi < fb1.x) ^ (xi < fb2.x))) { return {{T(),T()}, false}; }
-
-		return {coord<double>{xi, yi}.template as<T>(), true};
-	}
-
 	namespace rk {
 		template<typename T>
 		struct FourthOrder {
@@ -185,8 +35,6 @@ namespace experiments::cart_pole_single {
 			template<typename GetAcceleration, typename ...Args>
 			[[nodiscard]]
 			Self step(double dt, GetAcceleration &&reader, Args&& ...args) const noexcept {
-				using State = FourthOrder<T>;
-
 				Self k1 = this->sample(std::forward<GetAcceleration>(reader),     0, std::forward<Args>(args)...);
 				Self k2 =    k1.sample(std::forward<GetAcceleration>(reader), dt/2., std::forward<Args>(args)...);
 				Self k3 =    k2.sample(std::forward<GetAcceleration>(reader), dt/2., std::forward<Args>(args)...);
@@ -198,7 +46,7 @@ namespace experiments::cart_pole_single {
 				return Self{
 					.val = val + newSlope * dt,
 					.slope = slope + newCurve * dt,
-					.curve = curve,
+					.curve = newCurve,
 				};
 			}
 
@@ -231,37 +79,60 @@ namespace experiments::cart_pole_single {
 		const Real gravity;
 		const Real maxEngineForce;
 
-		const Real momentDampen = 1; // 0 <= x <= 1;
+		const Real momentDampen = 1. / 3.; // 0 <= x <= 1;
 
-		void step(Real force, double dt) noexcept {
+		void step(Real extForce, double dt) noexcept {
 			constexpr static auto sq = [](auto x) { return x * x; };
 			Real mc = cartMass;
-			Real cartAccel = force / mc;
 
-			this->horiz = this->horiz.step(dt, [cartAccel](auto&& ...) -> Real {
-				return cartAccel;
-			});
+			Real inverseMoment = 1. / (1. + momentDampen);
+			Real M = mc;
+			Real term1 = 0;
+			Real term2 = 0;
+			Real bottom1 = 0;
 
-			for(size_t i = 0; i < PoleCount; ++i) {
-				auto &pole = poles[i];
+			for(auto const &pole: poles) {
 				Real m = pole.mass;
 				Real l = pole.length;
-				Real sysMass = mc + m;
-				Real ml = m * l;
+				double sin, cos;
+				sincos(pole.angle.val, &sin, &cos);
+
+				term1 += m * sin * cos;
+				term2 += m * sin * (l/2.) * sq(pole.angle.slope);
+				bottom1 += m * sq(cos) * pole.angle.val;
+
+				M += m;
+			}
+
+			auto nextHorizCurve = ((gravity * term1) - inverseMoment * (extForce + term2))  /  (bottom1 - inverseMoment * M);
+
+			this->horiz = this->horiz.step(dt, [nextHorizCurve](auto&& ...) -> Real {
+				return nextHorizCurve;
+			});
+
+			for(auto &pole: poles) {
+				Real l = pole.length;
 
 				pole.angle = pole.angle.step(dt, [&](rk::FourthOrder<Real> state, auto&& ...) -> Real {
 					double sin, cos;
 					sincos(state.val, &sin, &cos);
 
-					auto top = (sysMass * ml * sin * gravity)
-					 		   - (ml * cos) * (force + ml * sin * sq(state.slope));
-					auto bottom = sysMass * (ml * l + momentDampen) - sq(ml * cos);
-
-					return top / bottom;
+					return (inverseMoment / (l/2.)) * (gravity * sin - nextHorizCurve * cos);
 				});				
 			}
 		}
 	};
+}
+
+
+unsigned int loadSensors(
+	experiments::cart_pole_single::CartPoleSystem<double, 1> sys,
+	std::vector<double> &inputs
+) {
+	inputs[0] = sys.horiz.val / sys.trackSize;
+	inputs[1] = (sys.horiz.slope / sys.trackSize) * .1;
+	inputs[2] = (sys.poles[0].angle.val / M_PI) / .1;
+	inputs[3] = sys.poles[0].angle.slope / M_PI;
 }
 
 unsigned int tryout(ann::NeuralNetFast &nn, experiments::cart_pole_single::CartPoleSystem<double, 1> sys) {
@@ -269,12 +140,8 @@ unsigned int tryout(ann::NeuralNetFast &nn, experiments::cart_pole_single::CartP
 	std::vector<double> inputs(4, 0.);
 	std::vector<double> outputs(1, 0.);
 
-	for(bool stop = false; !stop && (steps < 10000); ++steps) {
-		inputs[0] = sys.horiz.val / sys.trackSize;
-		inputs[1] = (sys.horiz.slope / sys.trackSize) * .1;
-		inputs[2] = ((sys.poles[0].angle.val / M_PI) - .5) / .1;
-		inputs[2] = sys.poles[0].angle.slope / M_PI;
-
+	for(bool stop = false; !stop && (steps < maxSteps); ++steps) {
+		loadSensors(sys, inputs);
 		nn.evaluate(inputs, outputs);
 
 		double force = sys.maxEngineForce * outputs[0];
@@ -285,7 +152,7 @@ unsigned int tryout(ann::NeuralNetFast &nn, experiments::cart_pole_single::CartP
 			break;
 		}
 		for(auto const &pole: sys.poles) {
-			if (.1 < fabs((pole.angle.val / M_PI) - .5)) {
+			if (.1 < fabs(pole.angle.val / M_PI)) {
 				stop = true;
 				break;
 			}
@@ -296,43 +163,129 @@ unsigned int tryout(ann::NeuralNetFast &nn, experiments::cart_pole_single::CartP
 }
 
 
+
+
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
+#include <SFML/System.hpp>
+
+#include <chrono>
+
+void show(ann::NeuralNetFast &nn, experiments::cart_pole_single::CartPoleSystem<double, 1> sys) noexcept {
+	constexpr static int px_m = 30;
+
+	sf::RenderWindow window;
+	window.create(sf::VideoMode({512, 512}), "AILib", sf::Style::Default);
+
+	sf::RectangleShape rCart(sf::Vector2f(128, 64));
+	auto rCartSize = rCart.getSize();
+	rCart.setOrigin(rCartSize / 2.f);
+	rCart.setFillColor(sf::Color(150, 50, 250));
+
+	sf::RectangleShape rPoles[1] = {
+		sf::RectangleShape{sf::Vector2f(px_m * sys.poles[0].length, 5)}
+	};
+	rPoles[0].setOutlineColor(sf::Color(250, 150, 100));
+	rPoles[0].rotate(sf::degrees(-90.));
+
+	sf::Vector2u winSize = window.getSize();
+	rCart.setPosition({winSize.x / 2.f, winSize.y - (rCartSize.y / 2.f) - 20.f});
+
+	unsigned int steps = 0;
+	bool stop = false;
+	std::vector<double> inputs(4, 0.);
+	std::vector<double> outputs(1, 0.);
+	sf::Clock clock;
+
+    while (window.isOpen()) {
+    	if (stop || !(steps < maxSteps)) {
+    		window.close();
+    		break;
+    	}
+
+    	if (.01 < clock.getElapsedTime().asSeconds()) {
+    		clock.restart();
+    		++steps;
+
+			loadSensors(sys, inputs);
+			nn.evaluate(inputs, outputs);
+
+			double force = sys.maxEngineForce * outputs[0];
+			sys.step(force, .01);
+
+			rCart.setPosition({
+				(winSize.x / 2.f) + px_m * sys.horiz.val,
+				winSize.y - (rCartSize.y / 2.f) - 20.f
+			});
+			rPoles[0].setRotation(sf::degrees(-90.) - sf::radians(sys.poles[0].angle.val));
+
+			if (sys.trackSize < fabs(sys.horiz.val)) {
+				stop = true;
+			}
+
+			for(auto const &pole: sys.poles) {
+				if (.1 < fabs(pole.angle.val / M_PI)) {
+					stop = true;
+				}
+			}    		
+    	}
+
+        for (sf::Event event; window.pollEvent(event); ) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            } else if ((event.type == sf::Event::KeyPressed) && sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+            	window.close();
+            }
+        }
+
+        window.clear(sf::Color::Black);
+        window.draw(rCart);
+        for (auto &rPole: rPoles) {
+        	window.draw(rPole, rCart.getTransform());
+        }
+        window.display();
+    }
+
+
+}
+
 int main() {
 	experiments::cart_pole_single::CartPoleSystem<double, 1> startSys{
 		.horiz = {},
 		.poles = {
 			{
 				.length = 1.0,
-				.mass = .1,
+				.mass = 40. - 2.,
 				.angle = {
-					.val = M_PI * (.5 + (1./360.))
+					.val = M_PI * (1./360.)
 				}
 			}
 		},
 
 
 		.trackSize = 4.8,
-		.cartMass = 1.0,
+		.cartMass = 2.0,
 		.gravity = 9.81,
-		.maxEngineForce = 10.
+		.maxEngineForce = 1000.
 	};
 
 
 	neat::MutationRateContainer mutation_rates = {};
 	neat::SpeciatingParameterContainer speciating_parameters = {};
 
-	// speciating_parameters.population = 1000;
-	speciating_parameters.stale_species = 5;
+	speciating_parameters.population = 1000;
+	// speciating_parameters.stale_species = 5;
 
-	// speciating_parameters.delta_disjoint = 1.0;
-	// speciating_parameters.delta_weights = 0.4;
-	// speciating_parameters.delta_threshold = 3.0;
+	speciating_parameters.delta_disjoint = 1.0;
+	speciating_parameters.delta_weights = 0.4;
+	speciating_parameters.delta_threshold = 3.0;
 
 	mutation_rates.connection_mutate_chance = 0.8;
 	mutation_rates.perturb_chance = 0.9;
 	// mutation_rates.crossover_chance = 0.95;
 	// mutation_rates.disable_mutation_chance = 0.75;
-	// mutation_rates.node_mutation_chance = 0.03;
-	// mutation_rates.link_mutation_chance = 0.05;
+	mutation_rates.node_mutation_chance = 0.03;
+	mutation_rates.link_mutation_chance = 0.3;
 	// mutation_rates.link_mutation_chance = 0.25;
 
 
@@ -341,9 +294,22 @@ int main() {
 		, mutation_rates, speciating_parameters
 	);
 
-	for(unsigned int best_fitness = 0; best_fitness < 990; pool.new_generation()) {
+		pool.import_fromfile("Balancer-Single.neat.pool");
+		for(auto &specie: pool.species) {
+			for(auto &genome: specie.genomes) {
+				ann::NeuralNetFast n;
+
+				n.from_genome(genome);
+				show(n, startSys);
+
+				return 0;
+			}
+		}
+
+
+	for(unsigned int best_fitness = 0; best_fitness < (unsigned int)((float)maxSteps * .98); pool.new_generation()) {
 		unsigned int max_fitness = 0;
-		unsigned int min_fitness = 100000;
+		unsigned int min_fitness = maxSteps;
 
 		for(auto &specie: pool.species) {
 			for(auto &genome: specie.genomes) {
@@ -369,5 +335,14 @@ int main() {
 			<< ", " << "Vanguard=" << max_fitness
 			<< ", " << "Slacker=" << min_fitness
 			<< std::endl;
+
+		if ((pool.generation() % 100) == 0) {
+			pool.export_tofile("Balancer-Single.neat.pool");
+		}
 	}
+
+	pool.export_tofile("Balancer-Single.neat.pool");
 }
+
+
+

@@ -10,8 +10,7 @@ add_executable(
   NeuralNetFast
   ${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetFast.cpp
 )
-target_link_libraries(NeuralNetFast tinyai)
-target_link_libraries(NeuralNetFast GTest::gmock GTest::gtest_main)
+target_link_libraries(NeuralNetFast tinyai GTest::gmock GTest::gtest_main)
 # target_include_directories(NeuralNetFast PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 include(GoogleTest)
