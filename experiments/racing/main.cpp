@@ -12,8 +12,8 @@
 #include "level.h"
 #include "physics.h"
 
-#include <tinyann.hpp>
-#include <tinyneat.hpp>
+#include <tinyai/tinyann.hpp>
+#include <tinyai/tinyneat.hpp>
 
 using namespace std;
 
@@ -225,7 +225,7 @@ public:
         sf::CircleShape c;
         c.setFillColor(sf::Color::Black);
         c.setRadius(8.0);
-        c.setPosition(position.x - 8, position.y - 8);
+        c.setPosition({position.x - 8, position.y - 8});
 
         sf::Vertex line1[] = { sf::Vertex(position), sf::Vertex(position + sensor_c) };
         window.draw(line1, 2, sf::Lines);
@@ -266,7 +266,7 @@ void output_info(
     bgcolor.a = 162;
 
     sf::RectangleShape background;
-    background.setPosition(window.getSize().x - 48*6, window.getSize().y - 48*3);
+    background.setPosition({window.getSize().x - 48*6, window.getSize().y - 48*3});
     background.setSize(sf::Vector2f(48*6, 48*3));
     background.setFillColor(bgcolor);
     background.setOutlineThickness(3);
@@ -286,7 +286,7 @@ void output_info(
     text.setPosition(sf::Vector2f(background.getPosition().x+6, background.getPosition().y+2));
     text.setString(ss.str());
     text.setCharacterSize(20);
-    text.setColor(sf::Color::Yellow);
+    text.setFillColor(sf::Color::Yellow);
 
     window.draw(background);
     window.draw(text);
@@ -302,7 +302,7 @@ int main()
     font.loadFromFile("UbuntuMono-R.ttf");
 
     sf::RenderWindow window;
-    window.create(sf::VideoMode(768, 768), "Kolobosha adventures");
+    window.create(sf::VideoMode({768, 768}), "Kolobosha adventures");
     window.setVerticalSyncEnabled(true); // call it once, after creating the window
     window.setFramerateLimit(30.0); // call it once, after creating the window
 

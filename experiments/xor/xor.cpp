@@ -85,9 +85,9 @@ int main(){
 #endif
 
 
-#include "NeatPool.hpp"
-#include "NeuralNet.hpp"
-#include "NeuralNetFast.hpp"
+#include "tinyai/NeatPool.hpp"
+#include "tinyai/NeuralNet.hpp"
+#include "tinyai/NeuralNetFast.hpp"
 
 template<typename RandomGenerator, size_t N = 1000>
 unsigned int tryout(ann::NeuralNetFast &nn, RandomGenerator &rng) {
@@ -193,7 +193,7 @@ int main() {
 
 		std::cerr << "Generation#" << pool.generation() << ": "
 			<< "RecordHigh=" << best_fitness
-			<< ", " << "Vanguard=" << max_fitness
+			<< ", " << "OverAchiever=" << max_fitness
 			<< ", " << "Slacker=" << min_fitness
 			<< std::endl;
 

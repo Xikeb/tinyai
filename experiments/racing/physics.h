@@ -125,10 +125,10 @@ intPolygon::intPolygon(std::vector< sf::Vector2f > point){
     if (this->Points.size() == 0) return ;
     // find area by the 1-th (with index 0) point
     sf::Vector2f p0 = this->Points[0];
-    for (int i=0; i<this->Points.size(); i++){
+    for (size_t i=0; i<this->Points.size(); i++){
 
-        int ind_1 = (i+0 % this->Points.size());
-        int ind_2 = (i+1 % this->Points.size());
+        size_t ind_1 = (i+0 % this->Points.size());
+        size_t ind_2 = (i+1 % this->Points.size());
         sf::Vector2f v1 = Points[ind_1] - p0;
         sf::Vector2f v2 = Points[ind_2] - p0;
         Area += ph::det(v1.x, v1.y, v2.x, v2.y);
@@ -152,9 +152,9 @@ sf::Vector2f intPolygon::CheckIntersect(sf::Vector2f p0, sf::Vector2f p1){
     if (p0 == p1) return iP;
 
     float distance = 1000000000.0f;
-    for (int i=0; i<this->Points.size(); i++){
-        int ind_1 = ((i+0) % this->Points.size());
-        int ind_2 = ((i+1) % this->Points.size());
+    for (size_t i=0; i<this->Points.size(); i++){
+        size_t ind_1 = ((i+0) % this->Points.size());
+        size_t ind_2 = ((i+1) % this->Points.size());
         sf::Vector2f v1 = Points[ind_1];
         sf::Vector2f v2 = Points[ind_2];
         sf::Vector2f temp = ph::GetPointOfIntersection(p0, p1, v1, v2);
@@ -181,9 +181,9 @@ sf::Vector2f intPolygon::ReflexSpeed(sf::Vector2f p0, sf::Vector2f *speedvec){
     sf::Vector2f p1 = sf::Vector2f(-1.0f,-1.0f);
     sf::Vector2f p2 = sf::Vector2f(-1.0f,-1.0f);
 
-    for (int i=0; i<this->Points.size(); i++){
-        int ind_1 = ((i+0) % this->Points.size());
-        int ind_2 = ((i+1) % this->Points.size());
+    for (size_t i=0; i<this->Points.size(); i++){
+        size_t ind_1 = ((i+0) % this->Points.size());
+        size_t ind_2 = ((i+1) % this->Points.size());
         sf::Vector2f v1 = Points[ind_1];
         sf::Vector2f v2 = Points[ind_2];
         sf::Vector2f temp = ph::GetPointOfIntersection(p0, pDest, v1, v2);

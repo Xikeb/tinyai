@@ -4,42 +4,36 @@ project(tinyai)
 set(CMAKE_CXX_STANDARD 20)
 
 add_library(tinyai OBJECT
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/strong_typedef.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyneat.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyann.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/MutationRateContainer.hpp        ${CMAKE_CURRENT_SOURCE_DIR}/src/MutationRateContainer.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/SpeciatingParameterContainer.hpp ${CMAKE_CURRENT_SOURCE_DIR}/src/SpeciatingParameterContainer.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/NetworkInfoContainer.hpp         ${CMAKE_CURRENT_SOURCE_DIR}/src/NetworkInfoContainer.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/Gene.hpp                         ${CMAKE_CURRENT_SOURCE_DIR}/src/Gene.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/Genotype.hpp                     ${CMAKE_CURRENT_SOURCE_DIR}/src/Genotype.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/Specie.hpp                       ${CMAKE_CURRENT_SOURCE_DIR}/src/Specie.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/InnovationContainer.hpp          ${CMAKE_CURRENT_SOURCE_DIR}/src/InnovationContainer.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/NeatPool.hpp                     ${CMAKE_CURRENT_SOURCE_DIR}/src/NeatPool.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/strong_typedef.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/tinyneat.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/tinyann.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/MutationRateContainer.hpp        ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/MutationRateContainer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/SpeciatingParameterContainer.hpp ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/SpeciatingParameterContainer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/NetworkInfoContainer.hpp         ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/NetworkInfoContainer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Gene.hpp                         ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/Gene.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Genotype.hpp                     ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/Genotype.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Specie.hpp                       ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/Specie.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/InnovationContainer.hpp          ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/InnovationContainer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/NeatPool.hpp                     ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/NeatPool.cpp
 
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/NeuralNet.cpp ${CMAKE_CURRENT_SOURCE_DIR}/include/NeuralNet.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/Neuron.cpp include/Phenotypes/Neuron.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/NeuralNetFast.cpp ${CMAKE_CURRENT_SOURCE_DIR}/include/NeuralNetFast.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/InitializationKit.cpp include/Phenotypes/InitializationKit.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/detail.hpp
-        include/Phenotypes/IPhenotype.hpp
-        include/Phenotypes/NeuralNetNaive.cpp include/Phenotypes/NeuralNetNaive.hpp include/Phenotypes/NeuralNetNaiveRecurrent.cpp include/Phenotypes/NeuralNetNaiveRecurrent.hpp include/Phenotypes/NeuralNetFastSerialRecurrent.cpp include/Phenotypes/NeuralNetFastSerialRecurrent.hpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/NeuralNet.cpp ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/NeuralNet.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/Neuron.cpp ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Phenotypes/Neuron.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/NeuralNetFast.cpp ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/NeuralNetFast.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/tinyai/InitializationKit.cpp ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Phenotypes/InitializationKit.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/detail.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Phenotypes/IPhenotype.hpp
 
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Phenotypes/NeuralNetNaive.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Phenotypes/NeuralNetNaive.hpp
 
-if (COMMAND easyLink) # Only for development purposes, defined elsewhere
-        easyLink(
-                ${CMAKE_CURRENT_SOURCE_DIR}/include
-                ${CMAKE_BINARY_DIR}/include/vendor/${PROJECT_NAME}
-                ${PROJECT_NAME}_INCLUDE
-        )
-        
-        add_dependencies(tinyai ${PROJECT_NAME}_INCLUDE)
-        target_include_directories(tinyai INTERFACE ${CMAKE_BINARY_DIR}/include/vendor/)
-        target_include_directories(tinyai PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-else()
-        target_include_directories(tinyai PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-endif()
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Phenotypes/NeuralNetNaiveRecurrent.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Phenotypes/NeuralNetNaiveRecurrent.hpp
 
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Phenotypes/NeuralNetFastSerialRecurrent.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyai/Phenotypes/NeuralNetFastSerialRecurrent.hpp
+)
 
+target_include_directories(tinyai PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set_target_properties(tinyai PROPERTIES LINKER_LANGUAGE CXX)
 target_compile_options(tinyai PUBLIC -Wall -Wextra)
 
@@ -49,3 +43,4 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/SFML)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/experiments/xor)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/experiments/SinglePole)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/experiments/racing)

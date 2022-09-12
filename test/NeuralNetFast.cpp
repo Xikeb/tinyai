@@ -81,9 +81,9 @@ bool AlmostEquals(double a, double b) noexcept {
 }
 
 
-#include "Phenotypes/IPhenotype.hpp"
-#include "NeuralNetFast.hpp"
-#include "Genotype.hpp"
+#include "tinyai/Phenotypes/IPhenotype.hpp"
+#include "tinyai/NeuralNetFast.hpp"
+#include "tinyai/Genotype.hpp"
 
 using ::testing::AllOf;
 using ::testing::Ge;

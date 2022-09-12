@@ -135,7 +135,7 @@ std::cout << "creating vector\n";
                 sf::Sprite sprite;
                 sprite.setTexture(tilesetImage);
                 sprite.setTextureRect(subRects[subRectToUse]);
-                sprite.setPosition(x * tileWidth, y * tileHeight);
+                sprite.setPosition({x * tileWidth, y * tileHeight});
                 sprite.setColor(sf::Color(255, 255, 255, layer.opacity));
 
                 layer.tiles.push_back(sprite);
@@ -196,8 +196,8 @@ std::cout << "creating vector\n";
 
                     sf::Sprite sprite;
                     sprite.setTexture(tilesetImage);
-                    sprite.setTextureRect(sf::Rect<int>(0,0,0,0));
-                    sprite.setPosition(x, y);
+                    sprite.setTextureRect(sf::Rect<int>({0,0}, {0,0}));
+                    sprite.setPosition({x, y});
 
                     if (objectElement->Attribute("width") != NULL)
                     {
@@ -259,9 +259,10 @@ std::cout << "creating vector\n";
                         pointArray = points->Attribute("points");
                     }
                     std::cout << "points: " << pointArray << std::endl;
-                    for (int h=0; h<pointArray.length(); h++)
-                    if (pointArray[h] == ',')
-                    pointArray[h] = ' ';
+                    for (size_t h=0; h<pointArray.length(); h++) {
+                        if (pointArray[h] == ',')
+                            pointArray[h] = ' ';
+                    }
                     std::cout << pointArray << std::endl;
                     std::stringstream ss(pointArray);
 
@@ -321,7 +322,7 @@ std::cout << "creating vector\n";
 Object Level::GetObject(std::string name){
     // Только первый объект с заданным именем
 
-    for (int i = 0; i < objects.size(); i++)
+    for (size_t i = 0; i < objects.size(); i++)
         if (objects[i].name == name)
             return objects[i];
 }
@@ -331,7 +332,7 @@ std::vector<Object> Level::GetObjects(std::string name)
     // Все объекты с заданным именем
     std::vector<Object> vec;
 
-    for(int i = 0; i < objects.size(); i++)
+    for(size_t i = 0; i < objects.size(); i++)
         if(objects[i].name == name)
             vec.push_back(objects[i]);
 
@@ -346,8 +347,8 @@ sf::Vector2i Level::GetTileSize()
 void Level::Draw(sf::RenderWindow &window)
 {
     // Рисуем все тайлы (объекты НЕ рисуем!)
-    for(int layer = 0; layer < layers.size(); layer++)
-        for(int tile = 0; tile < layers[layer].tiles.size(); tile++)
+    for(size_t layer = 0; layer < layers.size(); layer++)
+        for(size_t tile = 0; tile < layers[layer].tiles.size(); tile++)
             window.draw(layers[layer].tiles[tile]);
 }
 int Level::GetHeight(){
